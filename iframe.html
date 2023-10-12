@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head>
+   
+<script>
+	var doc = document;
+	var head = doc.head || doc.getElementsByTagName('head')[0];
+	var style = document.createElement('style');
+	head.appendChild(style);
+	var scripts = []
+	var htmlScript = document.createElement("script");
+	var mainScript = document.createElement("script");
+	
+	function gotMessage (evt) {
+		//only accept donote domain
+		console.log(evt);
+		console.log(evt.origin)
+		
+		var data = evt.data
+		if(data[0] === "html"){
+			emptyDiv(document.body)
+			insertHtml(data[1])
+		}
+		
+		if(data[0] === "css"){
+			
+			head.removeChild(style)
+			style = document.createElement('style');
+			head.appendChild(style);
+			insertCss(data[1])
+		}
+		
+		if(data[0] === "js"){
+			  console.log(data[1])
+			  var arr = data[1]
+			  var s =""
+			  for(var x =0; x < arr.length; x++){
+				s += arr[x]
+				s+="\n"
+			  }
+			  console.log(s)
+			  createScript(s)
+		}
+	}
+
+	if (window.addEventListener) {
+		// For standards-compliant web browsers
+		window.addEventListener("message", gotMessage, false);
+	} else {
+		window.attachEvent("onmessage", gotMessage);
+	}
+  
+	function createScript(src){
+		emptyNamedEle(head,"stuff");
+		mainScript = document.createElement("script");
+		mainScript.name ="stuff"
+		mainScript.innerHTML = src;
+		head.appendChild(mainScript)
+		console.log(head.children.length)
+	}
+	
+	function htmlScript(js){
+		console.log(js)
+		emptyNamedEle(head,"html");
+		htmlScript = document.createElement("script");
+		htmlScript.name = "html"
+		htmlScript.innerHTML = js
+		head.prepend(htmlScript)
+	}
+  
+  
+	function emptyDiv(div){
+		while(div.firstChild){
+		  div.removeChild(div.firstChild);
+		}
+	}
+  
+	function emptyNamedEle(div,name){
+		console.log(div.children)
+		var list = div.children;
+		for (let item of list) {
+			console.log(item.name);
+			if(item.name === name){
+				item.remove()
+			}
+		}
+	}
+
+	function insertCss(css){
+		var n = document.createTextNode(css)
+		style.appendChild(n);
+	}
+	function insertHtml(html){
+		document.body.insertAdjacentHTML('beforeend', html)
+		parseHtml(html)
+	}
+
+	function parseHtml(html){
+		console.log(html)
+		var txt = html.split("<script")
+		console.log(txt)
+		for(var x =0; x < txt.length; x++){
+			if(txt[x].includes("src=")){
+				getSrc(txt[x])
+			}else{
+				if(txt[x].includes("/script")){
+					getJs(txt[x])
+				}
+			}
+		}
+	}
+	
+	function getSrc(txt){
+		console.log(txt)
+		var t = txt.split("src=")
+		console.log(t)
+		var start = t[1]
+		console.log(start[0])
+		var startChar = start[0]
+		
+		var url = start.split(startChar)
+		console.log(url)
+		console.log(url[1])
+		url = url[1]
+		if(scripts.indexOf(url)===-1){
+			loadJS(url,head)
+			scripts.push(url)
+		}
+	}
+	
+	function getJs(js){
+		var code = js.split("<\/script>")
+		code = code[0]
+		code = code.substring(1)
+		console.log(code)
+		htmlScript(code)
+	}
+
+
+  
+  
+
+
+
+
+
+
+
+
+//loads js scripts with src in html area.
+var loadJS = function(url, location, implementationCode){
+    //url is URL of external file, implementationCode is the code
+    //to be called from the file, location is the location to
+    //insert the <script> element
+
+    var scriptTag = document.createElement('script');
+    scriptTag.src = url;
+	scriptTag.onload = implementationCode;
+    scriptTag.onreadystatechange = implementationCode;
+	location.appendChild(scriptTag);
+};
+
+//https://stackoverflow.com/questions/56446308/get-all-occurrences-of-a-substring-in-a-very-big-string
+function findSubstrings(str,searchKeyword){
+
+  var startingIndices = [];
+
+  var indexOccurence = str.indexOf(searchKeyword, 0);
+
+  while(indexOccurence >= 0) {
+      startingIndices.push(indexOccurence);
+			indexOccurence = str.indexOf(searchKeyword, indexOccurence + 1);
+  }
+	console.log(startingIndices)
+  return startingIndices;
+}
+</script>
+   
+</head>
+<body>
+	
+</body>
+</html>
